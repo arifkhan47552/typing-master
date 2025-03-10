@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Car Racing Game</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            background-color: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .game-container {
+            position: relative;
+            width: 800px;
+            height: 600px;
+            overflow: hidden;
+            background-image: url('https://your-image-url.com/background.jpg');
+            background-size: cover;
+            border: 5px solid #fff;
+        }
+
+        .car {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 50px;
+            height: 100px;
+            background-color: red;
+            border-radius: 5px;
+        }
+
+        .obstacle {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            background-color: yellow;
+            border-radius: 5px;
+        }
+
+        .score {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: white;
+            font-size: 24px;
+            font-family: Arial, sans-serif;
+        }
+
+        .game-over {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 48px;
+            color: red;
+            font-family: Arial, sans-serif;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="game-container">
+        <div class="car" id="car"></div>
+        <div class="score" id="score">Score: 0</div>
+        <div class="game-over" id="gameOver">Game Over</div>
+    </div>
+
+    <script>
+        const gameContainer = document.querySelector('.game-container');
+        const car = document.getElementById('car');
+        const scoreDisplay = document.getElementById('score');
+        const gameOverMessage = document.getElementById('gameOver');
+
+        const carWidth = 50;
+        const carHeight = 100;
+        let carPosition = 375;
+        let score = 0;
+        let gameOver = false;
+        let obstacles = [];
+        let gameInterval;
+        let obstacleSpeed = 3;
+
+        // Game setup
+        function startGame() {
+            carPosition = 375;
+            score = 0;
+            obstacles = [];
+            gameOver = false;
+            scoreDisplay.textContent = `Score: ${score}`;
+            gameOverMessage.style.display = 'none';
+
+            gameInterval = setInterval(gameLoop, 16);
+        }
+
+        // Update game state
+        function gameLoop() {
+            if (gameOver) return;
+
+            // Move obstacles
+            for (let i = 0; i < obstacles.length; i++) {
+                obstacles[i].style.top = (parseInt(obstacles[i].style.top) || 0) + obstacleSpeed + 'px';
+
+                // Check for collision
+                if (checkCollision(obstacles[i])) {
+                    gameOver = true;
+                    gameOverMessage.style.display = 'block';
+                    clearInterval(gameInterval);
+                }
+
+                // Remove obstacles that have passed the screen
+                if (parseInt(obstacles[i].style.top) > gameContainer.clientHeight) {
+                    obstacles[i].remove();
+                    obstacles.splice(i, 1);
+                    score++;
+                    scoreDisplay.textContent = `Score: ${score}`;
+                }
+            }
+
+            // Randomly spawn obstacles
+            if (Math.random() < 0.02) {
+                spawnObstacle();
+            }
+        }
+
+        // Spawn a new obstacle
+        function spawnObstacle() {
+            const obstacle = document.createElement('div');
+            obstacle.classList.add('obstacle');
+            obstacle.style.left = Math.random() * (gameContainer.clientWidth - 50) + 'px';
+            obstacle.style.top = '-50px';
+            gameContainer.appendChild(obstacle);
+            obstacles.push(obstacle);
+        }
+
+        // Check for collision with car
+        function checkCollision(obstacle) {
+            const carRect = car.getBoundingClientRect();
+            const obstacleRect = obstacle.getBoundingClientRect();
+
+            return !(carRect.right < obstacleRect.left ||
+                     carRect.left > obstacleRect.right ||
+                     carRect.bottom < obstacleRect.top ||
+                     carRect.top > obstacleRect.bottom);
+        }
+
+        // Control car movement
+        document.addEventListener('keydown', (event) => {
+            if (gameOver) return;
+
+            if (event.key === 'ArrowLeft' && carPosition > 0) {
+                carPosition -= 15;
+                car.style.left = carPosition + 'px';
+            } else if (event.key === 'ArrowRight' && carPosition < gameContainer.clientWidth - carWidth) {
+                carPosition += 15;
+                car.style.left = carPosition + 'px';
+            }
+        });
+
+        // Start the game when the page loads
+        startGame();
+    </script>
+</body>
+</html>
